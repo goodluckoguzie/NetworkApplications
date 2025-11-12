@@ -143,10 +143,12 @@ wmic computersystem where name="%computername%" call joindomainorworkgroup name=
 
 ### TERMINAL METHOD
 
-**IMPORTANT:** First make sure your WiFi is set to **Private** network (not Public). Use the GUI method above to check this.
+**CRITICAL:** These commands MUST be run on BOTH PCs! File sharing won't work if you only do it on one computer.
+
+**IMPORTANT:** First make sure your WiFi is set to **Private** network (not Public) on BOTH PCs. Use the GUI method above to check this.
 
 1. Right-click **Start** → Click **Command Prompt (Admin)**
-2. Copy and run these commands:
+2. Copy and run ALL 3 commands on BOTH PCs:
 
 ```cmd
 netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes
@@ -155,6 +157,16 @@ netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes
 ```cmd
 netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes
 ```
+
+```cmd
+netsh advfirewall set privateprofile state off
+```
+
+**Checklist:**
+- [ ] Ran all 3 commands on PC1
+- [ ] Ran all 3 commands on PC2
+- [ ] WiFi set to Private on PC1
+- [ ] WiFi set to Private on PC2
 
 ---
 
