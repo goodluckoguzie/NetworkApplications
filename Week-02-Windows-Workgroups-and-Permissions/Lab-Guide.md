@@ -4,6 +4,19 @@ Complete guide showing both GUI (clicking) and Terminal (command line) methods f
 
 ---
 
+## Lab Overview
+
+### PC Roles:
+- **PC1 = HOST** (Where you create users, groups, and shared folders)
+- **PC2 = CLIENT** (Accesses PC1's shared resources)
+
+### Which PC Does What:
+- **Tasks 1-8:** Do on BOTH PC1 and PC2 (so they can see each other)
+- **Tasks 9-16:** Do ONLY on PC1 (create users, groups, share folder)
+- **Tasks 17-23:** Use both PCs (PC2 accesses PC1's folder)
+
+---
+
 ## Important Terms
 
 | Term | Definition |
@@ -22,6 +35,8 @@ Complete guide showing both GUI (clicking) and Terminal (command line) methods f
 ---
 
 ## TASK 1: RENAME YOUR COMPUTER
+
+**Do on:** BOTH PC1 and PC2 (give each a unique name)
 
 ### GUI METHOD
 
@@ -57,6 +72,8 @@ Restart-Computer
 
 ## TASK 2: CHANGE WORKGROUP NAME
 
+**Do on:** BOTH PC1 and PC2 (both must use "NetAppsLab")
+
 ### GUI METHOD
 
 1. Right-click **Start** button (bottom-left corner, Windows logo)
@@ -91,6 +108,8 @@ wmic computersystem where name="%computername%" call joindomainorworkgroup name=
 ---
 
 ## TASK 3: ENABLE NETWORK DISCOVERY
+
+**Do on:** BOTH PC1 and PC2
 
 ### GUI METHOD
 
@@ -128,6 +147,8 @@ netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=
 
 ## TASK 4: TURN OFF FIREWALL (Temporarily for lab)
 
+**Do on:** BOTH PC1 and PC2
+
 ### GUI METHOD
 
 1. Click **Start** button (bottom-left corner)
@@ -164,6 +185,8 @@ netsh advfirewall set privateprofile state on
 
 ## TASK 5: CHECK YOUR COMPUTER NAME
 
+**Do on:** BOTH PC1 and PC2 (verify each has correct name and workgroup)
+
 ### GUI METHOD
 
 1. Click **Start** button (bottom-left corner)
@@ -189,6 +212,8 @@ Shows: **PC1** or **PC2**
 ---
 
 ## TASK 6: PING (TEST IF COMPUTERS CAN TALK)
+
+**Do on:** BOTH PCs (PC1 pings PC2, and PC2 pings PC1)
 
 ### GUI METHOD (Alternative)
 
@@ -223,6 +248,8 @@ ping PC2
 
 ## TASK 7: VIEW SHARED FOLDERS ON ANOTHER COMPUTER
 
+**Do on:** BOTH PCs (each PC checks if they can see the other)
+
 ### GUI METHOD
 
 1. Click **File Explorer** icon (folder on taskbar)
@@ -253,6 +280,8 @@ Shows list of shared folders
 ---
 
 ## TASK 8: CHECK IF NETWORK SERVICES ARE RUNNING
+
+**Do on:** BOTH PC1 and PC2
 
 ### GUI METHOD
 
@@ -291,6 +320,8 @@ Both should show **Running**
 ---
 
 ## TASK 9: CREATE A USER ACCOUNT
+
+**Do on:** ONLY PC1 (the host)
 
 ### GUI METHOD
 
@@ -339,6 +370,8 @@ net user
 
 ## TASK 10: CREATE A GROUP
 
+**Do on:** ONLY PC1 (the host)
+
 ### GUI METHOD
 
 1. Press **Windows key + R**
@@ -380,6 +413,8 @@ net localgroup
 
 ## TASK 11: ADD USER TO A GROUP
 
+**Do on:** ONLY PC1 (the host)
+
 ### GUI METHOD
 
 1. Press **Windows key + R**
@@ -414,6 +449,8 @@ net localgroup ProjectTeam User1 /add
 
 ## TASK 12: CHECK WHO IS IN A GROUP
 
+**Do on:** ONLY PC1 (the host)
+
 ### GUI METHOD
 
 1. Press **Windows key + R**
@@ -440,6 +477,8 @@ Shows members list
 ---
 
 ## TASK 13: CREATE A FOLDER
+
+**Do on:** ONLY PC1 (the host)
 
 ### GUI METHOD
 
@@ -476,6 +515,8 @@ dir C:\
 ---
 
 ## TASK 14: SHARE A FOLDER (Give Network Access)
+
+**Do on:** ONLY PC1 (the host)
 
 ### GUI METHOD
 
@@ -520,6 +561,8 @@ net share SharedData=C:\SharedData /grant:ProjectTeam,CHANGE
 ---
 
 ## TASK 15: SET NTFS PERMISSIONS (File-Level Security)
+
+**Do on:** ONLY PC1 (the host)
 
 ### GUI METHOD
 
@@ -567,6 +610,8 @@ icacls "C:\SharedData" /grant ProjectTeam:(OI)(CI)M
 ---
 
 ## TASK 16: VIEW EFFECTIVE PERMISSIONS (What User1 Can Actually Do)
+
+**Do on:** ONLY PC1 (the host)
 
 ### GUI METHOD
 
@@ -617,6 +662,8 @@ Shows all permissions
 
 ## TASK 17: MAP NETWORK DRIVE (Connect to Shared Folder from Other PC)
 
+**Do on:** PC2 (but first create User1 on PC2 with same password as PC1)
+
 ### GUI METHOD
 
 1. Open **File Explorer**
@@ -656,6 +703,8 @@ net use Z: \\PC1\SharedData /user:PC1\User1 P@ssword123 /persistent:yes
 
 ## TASK 18: VIEW ALL MAPPED DRIVES
 
+**Do on:** PC2 (to see the mapped Z: drive)
+
 ### GUI METHOD
 
 1. Open **File Explorer**
@@ -678,6 +727,8 @@ Shows all mapped drives
 ---
 
 ## TASK 19: DISCONNECT/REMOVE MAPPED DRIVE
+
+**Do on:** PC2 (disconnect from PC1's shared folder)
 
 ### GUI METHOD
 
@@ -707,6 +758,8 @@ net use * /delete
 
 ## TASK 20: REMOVE USER FROM GROUP
 
+**Do on:** PC1 (remove User1 from ProjectTeam to test access denial)
+
 ### GUI METHOD
 
 1. Press **Windows key + R**
@@ -731,6 +784,8 @@ net localgroup ProjectTeam User1 /delete
 ---
 
 ## TASK 21: DELETE A USER ACCOUNT
+
+**Do on:** Either PC (for cleanup after lab)
 
 ### GUI METHOD
 
@@ -757,6 +812,8 @@ net user User1 /delete
 
 ## TASK 22: DELETE A GROUP
 
+**Do on:** PC1 (for cleanup after lab)
+
 ### GUI METHOD
 
 1. Press **Windows key + R**
@@ -781,6 +838,8 @@ net localgroup ProjectTeam /delete
 ---
 
 ## TASK 23: REMOVE SHARE FROM FOLDER (Stop Sharing)
+
+**Do on:** PC1 (stop sharing the folder)
 
 ### GUI METHOD
 
