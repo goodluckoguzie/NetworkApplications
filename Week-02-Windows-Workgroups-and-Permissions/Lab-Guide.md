@@ -115,12 +115,43 @@ wmic computersystem where name="%computername%" call joindomainorworkgroup name=
 
 ### Step 1: Set WiFi to Private Network (CRITICAL!)
 
+**WHY THIS IS CRITICAL:** Windows blocks file sharing on Public networks for security. If your network is set to "Public", you will get "System error 5 - Access is denied" even after enabling all settings!
+
+**Check network type first:**
+
+```powershell
+Get-NetConnectionProfile
+```
+
+If **NetworkCategory** shows **Public**, you MUST change it to Private!
+
+**GUI Method to Change:**
+
 1. Click **Start** → **Settings**
 2. Click **Network & Internet**
 3. Click **WiFi** (left sidebar)
-4. Click on your **connected WiFi network name**
-5. Under **Network profile type**, make sure it's set to **Private** (NOT Public)
-6. If it says "Public", click **Private** to change it
+4. Click on your **connected WiFi network name** (e.g., "EE-93TWFS 2")
+5. Under **Network profile type**, you'll see:
+   - Public
+   - Private
+6. Click **Private** to change it
+7. Close Settings
+
+**Terminal Method to Change:**
+
+```powershell
+Set-NetConnectionProfile -Name "YourWiFiName" -NetworkCategory Private
+```
+
+(Replace "YourWiFiName" with your actual WiFi network name)
+
+**Verify the change:**
+
+```powershell
+Get-NetConnectionProfile
+```
+
+Should now show: **NetworkCategory: Private** ✓
 
 ### Step 2: Enable Network Discovery and File Sharing
 
