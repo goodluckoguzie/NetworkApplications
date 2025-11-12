@@ -277,6 +277,39 @@ net view \\PC2
 
 Shows list of shared folders
 
+### TROUBLESHOOTING: "System error 5 - Access is denied"
+
+If you get this error when running `net view`, it means file sharing isn't fully enabled yet.
+
+**Fix this on BOTH PCs:**
+
+1. Make sure you completed Task 3 (Enable Network Discovery) on BOTH computers
+2. Make sure you completed Task 4 (Turn off Firewall) on BOTH computers
+3. Run these commands on BOTH PCs:
+
+```cmd
+netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes
+```
+
+```cmd
+netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes
+```
+
+```cmd
+netsh advfirewall set privateprofile state off
+```
+
+4. Try `net view \\OtherComputerName` again
+
+**Expected after fix:**
+```
+Shared resources at \\ComputerName
+
+Share name   Type  Used as  Comment
+-------------------------------------------------------------------------------
+The command completed successfully.
+```
+
 ---
 
 ## TASK 8: CHECK IF NETWORK SERVICES ARE RUNNING
