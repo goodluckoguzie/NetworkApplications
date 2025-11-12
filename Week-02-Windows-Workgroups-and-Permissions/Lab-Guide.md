@@ -1022,7 +1022,38 @@ net share SharedData /delete
 
 If you encounter problems during the lab, use these diagnostic commands:
 
-### Check SMB Services
+### DIAGNOSTIC COMMANDS - Run to Find Problems
+
+#### 1. Check Network Profile Type (Public blocks file sharing!)
+
+```powershell
+Get-NetConnectionProfile
+```
+
+**Should show:** NetworkCategory: **Private**  
+**If shows:** NetworkCategory: **Public** ← This blocks file sharing!
+
+**Fix if Public:**
+
+```powershell
+Set-NetConnectionProfile -Name "YourWiFiName" -NetworkCategory Private
+```
+
+#### 2. Check Workgroup Name
+
+```powershell
+Get-WmiObject Win32_ComputerSystem | Select-Object Name, Domain
+```
+
+**Should show:** Both PCs have same Domain (e.g., NETAPPSLAB or WORKGROUP)
+
+**Or use:**
+
+```cmd
+wmic computersystem get domain
+```
+
+#### 3. Check SMB Services
 
 ```powershell
 Get-Service LanmanServer
@@ -1033,6 +1064,35 @@ Get-Service LanmanWorkstation
 ```
 
 Both should show **Status: Running**
+
+**If stopped, start them:**
+
+```cmd
+net start LanmanServer
+net start LanmanWorkstation
+```
+
+#### 4. Check Firewall Status
+
+```powershell
+Get-NetFirewallProfile -Profile Private | Select-Object Name, Enabled
+```
+
+**Should show:** Enabled: **False** (firewall is off)
+
+#### 5. Try Accessing by IP Address Instead of Name
+
+If computer name doesn't work, get the IP address. On the **other PC**, run:
+
+```cmd
+ipconfig
+```
+
+Look for **IPv4 Address** (like 192.168.x.x), then try:
+
+```cmd
+net view \\192.168.x.x
+```
 
 ### Clear All Network Connections
 
