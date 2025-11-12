@@ -111,7 +111,18 @@ wmic computersystem where name="%computername%" call joindomainorworkgroup name=
 
 **Do on:** BOTH PC1 and PC2
 
-### GUI METHOD
+**IMPORTANT:** First check your WiFi network type!
+
+### Step 1: Set WiFi to Private Network (CRITICAL!)
+
+1. Click **Start** → **Settings**
+2. Click **Network & Internet**
+3. Click **WiFi** (left sidebar)
+4. Click on your **connected WiFi network name**
+5. Under **Network profile type**, make sure it's set to **Private** (NOT Public)
+6. If it says "Public", click **Private** to change it
+
+### Step 2: Enable Network Discovery and File Sharing
 
 1. Click **Start** button (bottom-left, Windows logo)
 2. Type: **Control Panel** (start typing, no need to click search box)
@@ -131,6 +142,8 @@ wmic computersystem where name="%computername%" call joindomainorworkgroup name=
 16. Click **Save changes** button (bottom-right corner)
 
 ### TERMINAL METHOD
+
+**IMPORTANT:** First make sure your WiFi is set to **Private** network (not Public). Use the GUI method above to check this.
 
 1. Right-click **Start** → Click **Command Prompt (Admin)**
 2. Copy and run these commands:
