@@ -10,11 +10,15 @@ Complete guide showing both GUI (DFS Management) and Terminal (PowerShell) metho
 **Creating and Configuring Distributed File System (DFS) Namespace and Replication**
 
 ### PC Requirements:
-- **Two Windows Server 2022 VMs:** LondonFS and ManchesterFS
-- Both servers joined to **lab.local** domain (from Week 3)
+- **One physical PC** with virtualization software (Hyper-V, VMware, or VirtualBox)
+- **Two Windows Server 2022 VMs:**
+  - **VM 1:** Your existing Week 3 VM (domain controller) - will be used as **LondonFS**
+  - **VM 2:** New Windows Server 2022 VM you'll create - will be **ManchesterFS**
+- Both servers joined to **lab.local** domain
 - Administrator privileges on both servers
-- Active Directory Domain Services (AD DS) already installed
+- Active Directory Domain Services (AD DS) already installed on VM 1 (from Week 3)
 - Network connectivity between both servers
+- **See "SETUP: USING TWO WINDOWS SERVER 2022 VMs" section below for detailed instructions**
 
 ### What You'll Do:
 - **Activity 1:** Create a domain-based DFS namespace (\\lab.local\CompanyData) and add shared folder targets
@@ -23,20 +27,48 @@ Complete guide showing both GUI (DFS Management) and Terminal (PowerShell) metho
 
 ---
 
+## What is DFS? (Simple Explanation)
+
+**DFS (Distributed File System)** helps you access files on different servers using one simple path, and it can automatically keep files synchronized between servers.
+
+### Real-World Example:
+
+**Without DFS:**
+- Users in London need to remember: "Projects folder is on LondonFS server" → \\LondonFS\Shares\Projects
+- Users in Manchester need to remember: "Projects folder is on ManchesterFS server" → \\ManchesterFS\Shares\Projects
+- If LondonFS server breaks, London users can't access files
+- Files on LondonFS and ManchesterFS are different (not synchronized)
+
+**With DFS:**
+- Everyone uses the same path: \\lab.local\CompanyData\Projects
+- DFS automatically directs users to the nearest server
+- If one server breaks, users are automatically directed to the other server
+- DFS Replication keeps files synchronized between both servers automatically
+
+### Two Main Parts:
+
+1. **DFS Namespace:** Creates the "virtual folder path" that users access
+   - Like creating a shortcut that points to folders on different servers
+   - Users don't need to know which server has the files
+
+2. **DFS Replication:** Automatically copies files between servers
+   - When you save a file on LondonFS, it automatically appears on ManchesterFS
+   - Keeps both servers in sync
+
+---
+
 ## Important Terms
 
-| Term | Definition |
-|------|------------|
-| DFS Namespace | A virtual view of shared folders on different servers, providing a single logical path |
-| DFS Replication | Service that synchronizes folders between multiple servers automatically |
-| Domain-based Namespace | DFS namespace stored in Active Directory (e.g., \\domain\Namespace) |
-| Standalone Namespace | DFS namespace stored on a single server (e.g., \\Server\Namespace) |
-| Folder Target | Physical location (UNC path) that a DFS folder points to |
-| Replication Group | Collection of servers that replicate one or more folders |
-| Topology | Network structure for replication (Full Mesh, Hub and Spoke, etc.) |
-| Referral | List of folder targets returned to clients when accessing DFS namespace |
-| Site-Aware | DFS automatically directs clients to the nearest server based on AD sites |
-| RDC | Remote Differential Compression - reduces bandwidth by only replicating changes |
+| Term | Definition | Simple Explanation |
+|------|------------|-------------------|
+| DFS Namespace | A virtual view of shared folders on different servers, providing a single logical path | A "fake" folder path that points to real folders on different servers |
+| DFS Replication | Service that synchronizes folders between multiple servers automatically | Automatically copies files between servers so they stay the same |
+| Domain-based Namespace | DFS namespace stored in Active Directory (e.g., \\domain\Namespace) | The namespace is stored in AD, making it more reliable and easier to manage |
+| Folder Target | Physical location (UNC path) that a DFS folder points to | The actual folder on a real server (like \\LondonFS\Shares\Projects) |
+| Replication Group | Collection of servers that replicate one or more folders | A group of servers that keep their folders synchronized |
+| Topology | Network structure for replication (Full Mesh, Hub and Spoke, etc.) | How the servers are connected for replication (Full Mesh = all servers talk to each other) |
+| Site-Aware | DFS automatically directs clients to the nearest server based on AD sites | DFS knows where you are and sends you to the closest server |
+| RDC | Remote Differential Compression - reduces bandwidth by only replicating changes | Only copies the parts of files that changed, not the whole file (saves bandwidth) |
 
 ---
 
@@ -63,9 +95,250 @@ Complete guide showing both GUI (DFS Management) and Terminal (PowerShell) metho
 
 ---
 
+## SETUP: USING TWO WINDOWS SERVER 2022 VMs
+
+**For this lab, we will use TWO Windows Server 2022 virtual machines:**
+
+**What you already have:**
+- **One Windows Server 2022 VM from Week 3** - This is your domain controller (DC) with the lab.local domain
+- This VM is already set up and working
+
+**What you need to create:**
+- **One NEW Windows Server 2022 VM** - This will be your second server (ManchesterFS)
+
+**Total VMs needed:** 2 Windows Server 2022 VMs
+- VM 1: Your existing Week 3 VM (DC) - we'll use this as **LondonFS**
+- VM 2: New VM you'll create - this will be **ManchesterFS**
+
+**What this means:**
+- You already have one Windows Server 2022 VM from Week 3 (the domain controller)
+- You need to create a second Windows Server 2022 VM for Week 4
+- Both VMs will act as file servers for DFS
+- Both will be part of the lab.local domain
+
+---
+
+### STEP-BY-STEP SETUP: Create Second Windows Server 2022 VM
+
+**What we're doing:** We need two Windows Server 2022 servers for DFS. You already have one from Week 3 (your domain controller). Now we need to create a second one.
+
+**Setup Summary:**
+- **VM 1 (LondonFS):** Your existing Week 3 VM - the domain controller
+- **VM 2 (ManchesterFS):** New Windows Server 2022 VM - we'll create this now
+
+**Total:** 2 Windows Server 2022 VMs running on your PC
+
+---
+
+### STEP 1: Prepare Your Week 3 Windows Server 2022 VM (LondonFS)
+
+**What this does:** We'll use your existing Week 3 Windows Server 2022 VM as one of the file servers (LondonFS). This VM is already your domain controller, and we'll also use it as a file server.
+
+1. **Start your Week 3 Windows Server 2022 VM** (the one with lab.local domain)
+   - *This is the VM you created in Week 3*
+   - *It should already have Windows Server 2022 installed*
+
+2. **Log in** as **LAB\Administrator**
+   - *Use the same credentials you set up in Week 3*
+
+3. **Note the IP address** of this VM:
+   - Open **Command Prompt** or **PowerShell**
+   - Type: `ipconfig`
+   - Write down the IPv4 Address (should be something like 192.168.1.10)
+   - **This is your DC IP - we'll need it later when setting up the second VM**
+
+**What we just did:** We identified your existing Windows Server 2022 VM (the domain controller) so we can use it as LondonFS and point the new server to it.
+
+---
+
+### STEP 2: Create a New Windows Server 2022 VM (ManchesterFS)
+
+**What this does:** We're creating a second Windows Server 2022 VM that will act as ManchesterFS file server. This is the same type of VM you created in Week 3, but this one will be a file server, not a domain controller.
+
+**Important:** This is the same process you did in Week 3, but for a second server.
+
+1. **Open your virtualization software** (Hyper-V, VMware, or VirtualBox)
+   - *The same software you used to create your Week 3 VM*
+
+2. **Create a new virtual machine:**
+   - Click **New** or **Create Virtual Machine**
+   - Name it: **ManchesterFS**
+   - Choose **Windows Server 2022** as the operating system
+   - *This is the same Windows Server 2022 you used in Week 3*
+
+3. **Configure VM settings:**
+   - **RAM:** Allocate **2GB minimum** (4GB if your PC has 8GB+ RAM)
+     - *What this means: Your PC needs enough RAM to run TWO VMs. If your PC has 8GB total, give each VM 2GB.*
+   - **Hard Disk:** Create a **40GB** virtual hard disk
+     - *What this means: The VM needs its own storage space. 40GB is enough for Windows Server and our lab files.*
+   - **Network:** Set to **same virtual network** as your Week 3 VM
+     - *What this means: Both VMs need to be on the same network so they can talk to each other.*
+     - *This is very important - both VMs must be on the same virtual network!*
+
+4. **Install Windows Server 2022:**
+   - Start the VM
+   - Install Windows Server 2022 (exactly the same process as Week 3)
+   - When asked for computer name, type: **ManchesterFS**
+   - Set Administrator password (remember this!)
+   - *Note: This is the LOCAL Administrator password, not the domain password*
+
+**What we just did:** We created a second Windows Server 2022 VM. Now you have TWO Windows Server 2022 VMs:
+- VM 1: Your Week 3 VM (DC/LondonFS)
+- VM 2: New VM (ManchesterFS)
+
+---
+
+### STEP 3: Configure Network on ManchesterFS VM
+
+**What this does:** We're setting up the network so ManchesterFS can communicate with your domain controller.
+
+1. **Log into ManchesterFS VM** as Administrator (local account)
+
+2. **Set a static IP address:**
+   - Right-click **Start** → **Settings** → **Network & Internet**
+   - Click **Ethernet** → **Change adapter options**
+   - Right-click your network adapter → **Properties**
+   - Select **Internet Protocol Version 4 (TCP/IPv4)** → **Properties**
+   - Select **Use the following IP address:**
+     - **IP address:** `192.168.1.12`
+     - **Subnet mask:** `255.255.255.0`
+     - **Default gateway:** `192.168.1.1` (or your router IP)
+   - Select **Use the following DNS server addresses:**
+     - **Preferred DNS server:** `192.168.1.10` (your DC IP from Step 1)
+     - **Alternate DNS server:** Leave empty
+   - Click **OK** → **OK**
+
+3. **Test network connectivity:**
+   - Open **Command Prompt**
+   - Type: `ping 192.168.1.10` (your DC IP)
+   - You should see replies. If not, check your network settings.
+
+**What we just did:** We configured ManchesterFS to use a fixed IP address and point to your domain controller for DNS. This is important so the server can find and join the domain.
+
+---
+
+### STEP 4: Join ManchesterFS to the Domain
+
+**What this does:** We're making ManchesterFS part of your lab.local domain so it can work with DFS.
+
+1. **On ManchesterFS VM**, open **Server Manager**
+   - It should open automatically, or click **Start** → **Server Manager**
+
+2. **Join to domain:**
+   - In Server Manager, look at the left side
+   - Click **Local Server**
+   - Find **WORKGROUP** (it will show your current workgroup name)
+   - **Click on "WORKGROUP"** (it's a link)
+   - A "System Properties" window opens
+   - Click **Change...** button
+   - Select **Domain**
+   - Type: `lab.local`
+   - Click **OK**
+   - A login window appears
+   - Enter:
+     - **Username:** `LAB\Administrator`
+     - **Password:** (your DC Administrator password from Week 3)
+   - Click **OK**
+   - You'll see: "Welcome to the lab.local domain"
+   - Click **OK**
+   - **Important:** It will ask you to restart - click **Restart Now**
+
+3. **After restart:**
+   - Log in as **LAB\Administrator** (not local Administrator)
+   - Use the same password as your DC
+
+**What we just did:** ManchesterFS is now part of your domain. This means it can access domain resources and work with DFS.
+
+---
+
+### STEP 5: Verify Setup
+
+**What this does:** We're checking that everything is set up correctly before we start the DFS lab.
+
+**On ManchesterFS VM, run these checks:**
+
+1. **Check domain membership:**
+   - Open **PowerShell**
+   - Type: `(Get-WmiObject Win32_ComputerSystem).Domain`
+   - Press Enter
+   - **Expected result:** Should show `lab.local`
+   - If it doesn't, go back to Step 4
+
+2. **Test connection to DC:**
+   - In PowerShell, type: `Test-Connection 192.168.1.10` (your DC IP)
+   - Press Enter
+   - **Expected result:** Should show 4 successful pings
+   - If it fails, check network settings
+
+3. **Test DNS resolution:**
+   - In PowerShell, type: `Resolve-DnsName lab.local`
+   - Press Enter
+   - **Expected result:** Should show your DC's IP address
+   - If it fails, check DNS settings (should point to 192.168.1.10)
+
+**On your Week 3 DC VM, verify it's running:**
+- Make sure the DC VM is started
+- Log in and verify it's working
+- Note: We'll use this DC as **LondonFS** for the lab
+
+**What we just did:** We confirmed that ManchesterFS can communicate with the domain and DNS is working. This is essential for DFS to work.
+
+---
+
+### Network Configuration Summary
+
+**Here's what we have now - TWO Windows Server 2022 VMs:**
+
+| Server | Hostname | IP Address | DNS | Role |
+|--------|----------|------------|-----|------|
+| VM 1 (Week 3) | Your-DC-Name | 192.168.1.10 | 127.0.0.1 (self) | Domain Controller (will also be LondonFS) |
+| VM 2 (New) | ManchesterFS | 192.168.1.12 | 192.168.1.10 | File Server |
+
+**What this means:**
+- **VM 1:** Your existing Week 3 Windows Server 2022 VM - this is the domain controller and will also act as LondonFS
+- **VM 2:** New Windows Server 2022 VM we just created - this is ManchesterFS
+- Both are Windows Server 2022
+- Both are on the same network and can communicate
+- Both will be part of the lab.local domain
+
+---
+
+### Troubleshooting Setup
+
+**Problem:** Can't ping the DC from ManchesterFS  
+**Solution:**
+- Check both VMs are on the same virtual network
+- Verify IP addresses are correct
+- Check Windows Firewall (temporarily disable to test)
+- Make sure DC VM is running
+
+**Problem:** Can't join domain  
+**Solution:**
+- Verify DNS on ManchesterFS points to DC (192.168.1.10)
+- Check DC is running and accessible
+- Verify you're using correct credentials: `LAB\Administrator`
+- Make sure domain name is exactly: `lab.local` (lowercase)
+
+**Problem:** Low performance  
+**Solution:**
+- Close other applications on your physical PC
+- Reduce RAM allocated to VMs if needed
+- Only run the VMs you need (DC + ManchesterFS)
+
+---
+
+**Once all checks pass, you're ready to start Activity 1!**
+
+
+---
+
 ## ACTIVITY 1: CREATE A DOMAIN-BASED DFS NAMESPACE
 
-**Do on:** LondonFS (primary namespace server)
+**Do on:** Your Week 3 DC VM (this will be LondonFS)
+
+**What we're doing:** We're creating a DFS namespace. Think of it like creating a "virtual folder" that points to real folders on different servers. Users will access files through this virtual path instead of remembering which server has the files.
+
+**Example:** Instead of users needing to know "the Projects folder is on LondonFS server", they can just access "\\lab.local\CompanyData\Projects" and DFS will automatically direct them to the right server.
 
 **Goal:** Create a domain-based DFS namespace (\\lab.local\CompanyData) and add a shared folder (Projects) with targets on both servers.
 
@@ -75,28 +348,91 @@ Complete guide showing both GUI (DFS Management) and Terminal (PowerShell) metho
 
 ## TASK 1: INSTALL DFS NAMESPACES ROLE
 
+**What this does:** We're installing the DFS Namespaces feature on your server. This is like installing a program that allows your server to create and manage DFS namespaces.
+
+**Do on:** Your Week 3 DC VM (LondonFS)
+
 ### GUI METHOD (Server Manager)
 
-1. Log into **LondonFS** with Administrator account (LAB\Administrator)
-2. **Server Manager** opens automatically (or click Start → Server Manager)
+1. **Log into your Week 3 DC VM** with Administrator account (LAB\Administrator)
+   - *This is the VM you created in Week 3 that has the lab.local domain*
+
+2. **Server Manager** opens automatically (or click **Start** → **Server Manager**)
+   - *Server Manager is the main tool for managing Windows Server*
+
 3. Click **Manage** (top-right corner)
+   - *This opens a menu with management options*
+
 4. Click **Add Roles and Features**
-5. "Add Roles and Features Wizard" opens
-6. Click **Next** (Before You Begin page)
-7. Select **Role-based or feature-based installation**
-8. Click **Next**
-9. Select **LondonFS** from the server pool
-10. Click **Next**
-11. On "Server Roles" page, expand **File and Storage Services**
-12. Expand **File and iSCSI Services**
-13. Check the box for **DFS Namespaces**
-14. A popup appears "Add features that are required for DFS Namespaces?"
-15. Click **Add Features**
-16. Click **Next**
-17. Click **Next** (Features page)
-18. Click **Install**
-19. Wait for installation to complete (may take a few minutes)
-20. Click **Close** when done
+   - *This starts the wizard to install new features on the server*
+
+5. **"Add Roles and Features Wizard" window opens**
+   - *In your window, you will see a wizard with several pages*
+   - *The first page says "Before You Begin"*
+
+6. **Click Next** (Before You Begin page)
+   - *In your window, you will see information about roles and features*
+   - *Click the **Next** button at the bottom*
+
+7. **Select "Role-based or feature-based installation"**
+   - *In your window, you will see two options*
+   - *Select the first option: "Role-based or feature-based installation"*
+   - *Click **Next***
+
+8. **Select your server from the server pool**
+   - *In your window, you will see a list of servers*
+   - *You should see your server name (your DC name) in the list*
+   - *Select it (it may already be selected)*
+   - *Click **Next***
+
+9. **On "Server Roles" page, expand "File and Storage Services"**
+   - *In your window, you will see a list of server roles with checkboxes*
+   - *Find "File and Storage Services" in the list*
+   - *Click the arrow (►) next to it to expand it*
+   - *You will see it expand to show more options*
+
+10. **Expand "File and iSCSI Services"**
+    - *In your window, you will see "File and iSCSI Services" under File and Storage Services*
+    - *Click the arrow (►) next to it*
+    - *You will see it expand to show more options including "DFS Namespaces"*
+
+11. **Check the box for "DFS Namespaces"**
+    - *In your window, you will see "DFS Namespaces" with a checkbox*
+    - *Click the checkbox to select it*
+    - *The checkbox will show a checkmark (✓)*
+
+12. **A popup window appears: "Add features that are required for DFS Namespaces?"**
+    - *In your window, you will see a small popup window*
+    - *The message says "Add features that are required for DFS Namespaces?"*
+    - *You will see two buttons: "Add Features" and "Cancel"*
+    - *Click **Add Features***
+    - *The popup closes and you will see additional features automatically selected*
+
+13. **Click Next**
+    - *In your window, you will see the "DFS Namespaces" role is now selected*
+    - *Click **Next** at the bottom*
+
+14. **Click Next (Features page)**
+    - *In your window, you will see a page titled "Features"*
+    - *You don't need to select anything here*
+    - *Click **Next** to continue*
+
+15. **Click Install**
+    - *In your window, you will see a confirmation page showing what will be installed*
+    - *Review the information*
+    - *Click **Install** at the bottom*
+    - *The installation begins*
+
+16. **Wait for installation to complete (may take a few minutes)**
+    - *In your window, you will see a progress bar showing installation progress*
+    - *You will see messages like "Installing DFS Namespaces..."*
+    - *Wait until you see "Installation succeeded" or similar message*
+    - *Be patient - this may take 2-5 minutes!*
+
+17. **Click Close when done**
+    - *In your window, you will see "Installation succeeded" or a green checkmark*
+    - *Click **Close** to finish*
+    - *The wizard closes*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -119,27 +455,88 @@ Restart Needed: No
 
 ## TASK 2: CREATE SHARED FOLDERS ON BOTH SERVERS
 
-**Do on:** Both LondonFS and ManchesterFS
+**What this does:** Before we can use DFS, we need actual folders on both servers that we can share. We're creating a "Projects" folder on each server and making it accessible over the network (sharing it).
+
+**Do on:** Both your DC VM (LondonFS) and ManchesterFS VM
 
 ### GUI METHOD
 
-**On LondonFS:**
-1. Open **File Explorer**
-2. Navigate to **D:\** (create D: drive if it doesn't exist)
-3. Right-click in empty space → **New** → **Folder**
-4. Name it **Shares**
-5. Open **Shares** folder
-6. Right-click in empty space → **New** → **Folder**
-7. Name it **Projects**
-8. Right-click **Projects** folder → **Properties**
-9. Click **Sharing** tab
-10. Click **Share...**
-11. In the "Network File and Folder Sharing" window:
-    - Add **Everyone** (or **Domain Users**)
-    - Set permission to **Read/Write**
-    - Click **Share**
-12. Click **Done**
-13. Note the share path: **\\LondonFS\Shares\Projects**
+**On LondonFS (Your Week 3 DC VM):**
+
+1. **Open File Explorer**
+   - *Click the folder icon on the taskbar, or press Windows key + E*
+
+2. **Navigate to D:\ drive**
+   - *Click on "This PC" in the left pane*
+   - *If you don't have a D: drive, that's okay - we can use C:\ instead*
+   - *If using C:\, navigate to C:\Shares instead*
+
+3. **Create the Shares folder:**
+   - Right-click in empty space → **New** → **Folder**
+   - Name it **Shares**
+   - *This will be our main folder for shared files*
+
+4. **Open the Shares folder**
+   - Double-click **Shares** to open it
+
+5. **Create the Projects folder:**
+   - Right-click in empty space → **New** → **Folder**
+   - Name it **Projects**
+   - *This is the folder we'll use for DFS*
+
+6. **Share the folder:**
+   - Right-click **Projects** folder → **Properties**
+   - *A "Properties" window opens*
+
+7. **Click the "Sharing" tab**
+   - *In the Properties window, you will see several tabs at the top*
+   - *Click on the **Sharing** tab*
+   - *You will see sharing options*
+
+8. **Click the "Share..." button**
+   - *In your window, you will see a "Share..." button*
+   - *Click it*
+   - *A "Network File and Folder Sharing" window opens*
+
+9. **In the "Network File and Folder Sharing" window:**
+   - *In your window, you will see a dropdown box and an "Add" button*
+   - *Click the dropdown arrow*
+   - *You will see a list of users/groups*
+   - *Select **Everyone** from the list (or type **Domain Users** and click Add)*
+   - *Click **Add***
+   - *You will see "Everyone" appear in the list below with "Read" permission*
+
+10. **Set permissions:**
+    - *In your window, you will see "Everyone" in the list*
+    - *Next to it, you will see a dropdown that says "Read"*
+    - *Click the dropdown arrow*
+    - *You will see options: "Read" and "Read/Write"*
+    - *Select **Read/Write***
+    - *The dropdown will now show "Read/Write"*
+
+11. **Click Share**
+    - *In your window, you will see a "Share" button at the bottom*
+    - *Click it*
+    - *You will see a message: "Your folder is shared"*
+
+12. **Click Done**
+    - *In your window, you will see a "Done" button*
+    - *Click it*
+    - *The sharing window closes*
+
+13. **Note the share path:**
+    - *In the Properties window, you will see the network path*
+    - *It should show: **\\LondonFS\Shares\Projects** (or your server name)*
+    - *Write this down - we'll need it later*
+    - *Close the Properties window*
+
+**On ManchesterFS VM:**
+
+1. **Repeat all steps 1-12 above on the ManchesterFS VM**
+   - *Do exactly the same thing, but on the ManchesterFS server*
+
+2. **Note the share path:** **\\ManchesterFS\Shares\Projects**
+   - *This will be slightly different because it's on a different server*
 
 **On ManchesterFS:**
 1. Repeat steps 1-12 above
@@ -177,25 +574,84 @@ Get-SmbShare
 
 ## TASK 3: CREATE DOMAIN-BASED DFS NAMESPACE
 
+**What this does:** We're creating the DFS namespace. This is like creating a "virtual folder path" that users will use to access files. Instead of remembering which server has the files, users just access \\lab.local\CompanyData and DFS figures out which server to use.
+
+**Think of it like this:** 
+- **Without DFS:** Users need to know "Projects folder is on LondonFS server" → \\LondonFS\Shares\Projects
+- **With DFS:** Users just access "CompanyData\Projects" → \\lab.local\CompanyData\Projects
+- DFS automatically directs them to the right server!
+
+**Do on:** Your Week 3 DC VM (LondonFS)
+
 ### GUI METHOD (DFS Management)
 
-1. On **LondonFS**, open **Server Manager**
-2. Click **Tools** (top-right) → **DFS Management**
-3. Or press **Win + R** → Type **dfsmgmt.msc** → Press Enter
-4. In the left pane, right-click **Namespaces**
-5. Click **New Namespace...**
-6. "New Namespace Wizard" opens
-7. **Namespace Server:** Type or browse to **LondonFS**
-8. Click **Next**
-9. **Namespace Name:** Type **CompanyData**
-10. Click **Next**
-11. **Namespace Type:** Select **Domain-based namespace**
-12. **Enable Windows Server 2008 mode:** Leave checked (for better features)
-13. Click **Next**
-14. Review settings - namespace path will be **\\lab.local\CompanyData**
-15. Click **Create**
-16. Click **Close**
-17. You should now see **\\lab.local\CompanyData** in DFS Management
+1. **On your DC VM (LondonFS)**, open **Server Manager**
+   - *Make sure you're logged in as LAB\Administrator*
+
+2. **Open DFS Management:**
+   - Click **Tools** (top-right) → **DFS Management**
+   - OR press **Win + R** → Type **dfsmgmt.msc** → Press Enter
+   - *DFS Management is the tool we use to configure DFS*
+
+3. **In the left pane, right-click "Namespaces"**
+   - *In your DFS Management window, you will see "Namespaces" in the left pane (tree view)*
+   - *Right-click on "Namespaces"*
+   - *A context menu appears*
+
+4. **Click "New Namespace..."**
+   - *In the context menu, you will see "New Namespace..."*
+   - *Click it*
+   - *The "New Namespace Wizard" window opens*
+
+5. **"New Namespace Wizard" window opens**
+   - *In your window, you will see the wizard with a "Namespace Server" page*
+   - *You will see a text box asking for the namespace server*
+
+6. **Namespace Server:**
+   - *In your window, you will see a text box*
+   - *Type your server name (your DC name, or type **LondonFS** if you renamed it)*
+   - *OR click "Browse..." to find your server*
+   - *Click **Next***
+   - *The wizard moves to the next page*
+
+7. **Namespace Name:**
+   - *In your window, you will see a page asking for "Namespace Name"*
+   - *You will see a text box*
+   - *Type **CompanyData** in the text box*
+   - *Click **Next***
+
+8. **Namespace Type:**
+   - *In your window, you will see a page asking for "Namespace Type"*
+   - *You will see two options: "Domain-based namespace" and "Standalone namespace"*
+   - *Select **Domain-based namespace** (the first option)*
+   - *You will see a checkbox: "Enable Windows Server 2008 mode"*
+   - *Make sure this checkbox is checked (it should be by default)*
+   - *Click **Next***
+
+9. **Review settings:**
+   - *In your window, you will see a "Review Settings" page*
+   - *You will see a summary showing:*
+     - *Namespace Server: Your server name*
+     - *Namespace Name: CompanyData*
+     - *Namespace Path: **\\lab.local\CompanyData***
+   - *Review to make sure everything is correct*
+
+10. **Click Create**
+    - *In your window, you will see a "Create" button*
+    - *Click it*
+    - *You will see a progress message: "Creating namespace..."*
+    - *Then you will see: "The namespace was successfully created"*
+
+11. **Click Close**
+    - *In your window, you will see a "Close" button*
+    - *Click it*
+    - *The wizard closes*
+
+12. **Verify:**
+    - *Back in DFS Management, look at the left pane*
+    - *You should now see **\\lab.local\CompanyData** under "Namespaces"*
+    - *It will appear as a folder icon with the name "\\lab.local\CompanyData"*
+    - *If you see it, the namespace was created successfully!*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -221,17 +677,60 @@ Get-DfsnRoot
 
 ## TASK 4: ADD SECOND NAMESPACE SERVER (ManchesterFS)
 
+**What this does:** We're adding ManchesterFS as a second server that can host the namespace. This provides redundancy - if one server goes down, the other can still serve the namespace. This makes the system more reliable.
+
+**Do on:** Your DC VM (LondonFS) - same server where we created the namespace
+
 ### GUI METHOD
 
-1. In **DFS Management**, expand **Namespaces**
-2. Expand **\\lab.local\CompanyData**
-3. Click on **\\lab.local\CompanyData** (the namespace itself)
-4. In the right pane, click **Namespace Servers** tab
-5. Right-click in the empty area → Click **Add Namespace Server...**
-6. **Namespace Server:** Type or browse to **ManchesterFS**
-7. Click **OK**
-8. Wait for synchronization (may take a minute)
-9. You should now see both **LondonFS** and **ManchesterFS** listed as namespace servers
+1. **In DFS Management, expand "Namespaces"**
+   - *In your DFS Management window, look at the left pane*
+   - *You will see "Namespaces" with an arrow (►) next to it*
+   - *Click the arrow to expand it*
+   - *You will see it expand to show **\\lab.local\CompanyData***
+
+2. **Expand \\lab.local\CompanyData**
+   - *In the left pane, you will see **\\lab.local\CompanyData** with an arrow (►)*
+   - *Click the arrow to expand it*
+   - *You will see it expand (it may show nothing yet, or show folders if any exist)*
+
+3. **Click on \\lab.local\CompanyData** (the namespace itself)
+   - *In the left pane, click directly on **\\lab.local\CompanyData** (not the arrow)*
+   - *The right pane will show details about the namespace*
+   - *You will see tabs at the top of the right pane*
+
+4. **In the right pane, click the "Namespace Servers" tab**
+   - *In the right pane, you will see tabs: "General", "Namespace Servers", "Delegation", etc.*
+   - *Click on the **Namespace Servers** tab*
+   - *You will see a list showing your current namespace server (LondonFS or your DC name)*
+
+5. **Right-click in the empty area** → Click **Add Namespace Server...**
+   - *In the right pane, right-click in the white space below the existing server*
+   - *A context menu appears*
+   - *You will see "Add Namespace Server..." in the menu*
+   - *Click it*
+   - *An "Add Namespace Server" window opens*
+
+6. **Namespace Server:**
+   - *In the window, you will see a text box asking for "Namespace Server"*
+   - *Type **ManchesterFS** in the text box*
+   - *OR click "Browse..." to find ManchesterFS*
+   - *Click **OK***
+   - *You will see a message: "Adding namespace server..."*
+
+7. **Wait for synchronization** (may take a minute)
+   - *In your window, you will see a progress message*
+   - *It will say something like "Synchronizing namespace..."*
+   - *Wait until you see "The namespace server was successfully added" or similar*
+   - *This may take 30-60 seconds*
+
+8. **Verify:**
+   - *Back in the right pane, look at the "Namespace Servers" tab*
+   - *You should now see both servers listed:*
+     - *Your DC name (or LondonFS)*
+     - *ManchesterFS*
+   - *Both should show as "Online" or have a green status*
+   - *If you see both, the setup is working correctly!*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -249,21 +748,74 @@ Get-DfsnRootTarget -Path "\\lab.local\CompanyData"
 
 ## TASK 5: CREATE DFS FOLDER (Projects)
 
+**What this does:** We're creating a "virtual folder" called "Projects" inside our namespace. This folder will point to the actual Projects folders on both servers. When users access \\lab.local\CompanyData\Projects, DFS will automatically direct them to one of the real folders (either on LondonFS or ManchesterFS).
+
+**Think of it like this:**
+- We have two real folders: \\LondonFS\Shares\Projects and \\ManchesterFS\Shares\Projects
+- We're creating one virtual folder: \\lab.local\CompanyData\Projects
+- The virtual folder "points to" both real folders
+- Users access the virtual folder, and DFS picks which real folder to use
+
+**Do on:** Your DC VM (LondonFS)
+
 ### GUI METHOD
 
-1. In **DFS Management**, expand **Namespaces**
-2. Right-click **\\lab.local\CompanyData**
-3. Click **New Folder...**
-4. **Name:** Type **Projects**
-5. Click **Add...** to add folder targets
-6. **Folder Target Path:** Type **\\LondonFS\Shares\Projects**
-7. Click **OK**
-8. Click **Add...** again
-9. **Folder Target Path:** Type **\\ManchesterFS\Shares\Projects**
-10. Click **OK**
-11. You should see both targets listed
-12. Click **OK**
-13. **Projects** folder now appears under CompanyData
+1. **In DFS Management, expand "Namespaces"**
+   - *In your DFS Management window, look at the left pane*
+   - *Make sure **\\lab.local\CompanyData** is expanded (you can see it)*
+
+2. **Right-click \\lab.local\CompanyData**
+   - *In the left pane, right-click directly on **\\lab.local\CompanyData***
+   - *A context menu appears*
+
+3. **Click "New Folder..."**
+   - *In the context menu, you will see "New Folder..."*
+   - *Click it*
+   - *A "New Folder" window opens*
+
+4. **Name: Type "Projects"**
+   - *In the window, you will see a text box labeled "Name:"*
+   - *Type **Projects** in the text box*
+   - *Don't click OK yet!*
+
+5. **Click the "Add..." button** to add folder targets
+   - *In the window, you will see an "Add..." button*
+   - *Click it*
+   - *A "Add Folder Target" window opens*
+   - *You will see a text box asking for "Path to folder target"*
+
+6. **Folder Target Path: Type \\LondonFS\Shares\Projects**
+   - *In the window, type **\\LondonFS\Shares\Projects** (or your server name)*
+   - *Click **OK***
+   - *The window closes and you return to the "New Folder" window*
+   - *You will see the path appear in the list*
+
+7. **Click "Add..." again**
+   - *In the "New Folder" window, click **Add...** again*
+   - *The "Add Folder Target" window opens again*
+
+8. **Folder Target Path: Type \\ManchesterFS\Shares\Projects**
+   - *In the window, type **\\ManchesterFS\Shares\Projects***
+   - *Click **OK***
+   - *You return to the "New Folder" window*
+
+9. **Verify targets:**
+   - *In the "New Folder" window, you will see a list showing both targets:*
+     - *\\LondonFS\Shares\Projects*
+     - *\\ManchesterFS\Shares\Projects*
+   - *Both should show as "Online" (you may see a status column)*
+   - *If both show as "Online", you're good to go!*
+
+10. **Click OK**
+    - *In the "New Folder" window, click **OK** at the bottom*
+    - *The window closes*
+    - *You will see a message: "The folder was successfully created" or similar*
+
+11. **Verify:**
+    - *Back in DFS Management, look at the left pane*
+    - *Under **\\lab.local\CompanyData**, you should now see **Projects** as a folder*
+    - *It will appear as a folder icon with the name "Projects"*
+    - *If you see it, the folder was created successfully!*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -290,17 +842,50 @@ Get-DfsnFolderTarget -Path "\\lab.local\CompanyData\Projects"
 
 ## TASK 6: VERIFY DFS NAMESPACE
 
+**What this does:** We're checking that our DFS namespace is working correctly. We'll verify that both folder targets are online and that we can actually access the namespace.
+
+**Do on:** Your DC VM (LondonFS)
+
 ### GUI METHOD
 
-1. In **DFS Management**, expand **\\lab.local\CompanyData**
-2. Click on **Projects** folder
-3. In the right pane, **Folder Targets** tab should show:
-   - \\LondonFS\Shares\Projects (Online)
-   - \\ManchesterFS\Shares\Projects (Online)
-4. Test access: Open **File Explorer**
-5. Navigate to **\\lab.local\CompanyData\Projects**
-6. You should be able to access the folder
-7. Create a test file to verify write access
+1. **In DFS Management, expand \\lab.local\CompanyData**
+   - *In your DFS Management window, look at the left pane*
+   - *You will see **\\lab.local\CompanyData** with an arrow (►)*
+   - *Click the arrow to expand it*
+   - *You will see **Projects** folder appear underneath*
+
+2. **Click on "Projects" folder**
+   - *In the left pane, click directly on **Projects***
+   - *The right pane will show details about the Projects folder*
+   - *You will see tabs at the top: "General", "Folder Targets", "Delegation", etc.*
+
+3. **Click the "Folder Targets" tab**
+   - *In the right pane, click on the **Folder Targets** tab*
+   - *You will see a list showing:*
+     - *\\LondonFS\Shares\Projects (Online)*
+     - *\\ManchesterFS\Shares\Projects (Online)*
+   - *Both should show as "Online" - if they do, the namespace is working!*
+
+4. **Test access: Open File Explorer**
+   - *Click the **Start** button → **File Explorer** (or press Windows key + E)*
+   - *File Explorer window opens*
+
+5. **Navigate to \\lab.local\CompanyData\Projects**
+   - *In File Explorer, click in the address bar at the top*
+   - *Type: **\\lab.local\CompanyData\Projects***
+   - *Press Enter*
+   - *You will see the folder open*
+
+6. **You should be able to access the folder**
+   - *In File Explorer, you will see the contents of the Projects folder*
+   - *It may be empty, or it may show files if any exist*
+   - *If you can see the folder, DFS is working!*
+
+7. **Create a test file to verify write access**
+   - *Right-click in the empty space in File Explorer*
+   - *Select **New** → **Text Document***
+   - *Name it **TestFile.txt***
+   - *If you can create the file, write access is working!*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -367,24 +952,79 @@ Get-DfsnFolder -Path "\\lab.local\CompanyData" -Recurse
 
 ## TASK 7: INSTALL DFS REPLICATION FEATURE
 
+**What this does:** We're installing the DFS Replication feature on both servers. This allows the servers to automatically synchronize (copy) files between them.
+
+**Do on:** Both your DC VM (LondonFS) and ManchesterFS VM
+
 ### GUI METHOD (Server Manager)
 
-**On both LondonFS and ManchesterFS:**
+**On LondonFS (Your Week 3 DC VM):**
 
-1. Open **Server Manager**
-2. Click **Manage** → **Add Roles and Features**
-3. Click **Next** (Before You Begin)
-4. Select **Role-based or feature-based installation**
-5. Click **Next**
-6. Select your server
-7. Click **Next**
-8. On "Features" page (NOT Server Roles), expand **File and Storage Services**
-9. Check **DFS Replication**
-10. Click **Next**
-11. Click **Install**
-12. Wait for installation
-13. Click **Close**
-14. **Repeat on ManchesterFS**
+1. **Open Server Manager**
+   - *Server Manager should open automatically, or click **Start** → **Server Manager***
+
+2. **Click Manage → Add Roles and Features**
+   - *In Server Manager, click **Manage** (top-right)*
+   - *A menu appears*
+   - *Click **Add Roles and Features***
+   - *The "Add Roles and Features Wizard" window opens*
+
+3. **Click Next (Before You Begin)**
+   - *In your window, you will see the "Before You Begin" page*
+   - *Click **Next** at the bottom*
+
+4. **Select "Role-based or feature-based installation"**
+   - *In your window, you will see two options*
+   - *Select the first option: "Role-based or feature-based installation"*
+   - *Click **Next***
+
+5. **Select your server**
+   - *In your window, you will see a list of servers*
+   - *Select your server (LondonFS or your DC name)*
+   - *Click **Next***
+
+6. **Click Next (Server Roles page)**
+   - *In your window, you will see the "Server Roles" page*
+   - *DO NOT select anything here - we're installing a Feature, not a Role*
+   - *Click **Next** to skip this page*
+
+7. **On "Features" page, expand "File and Storage Services"**
+   - *In your window, you will see the "Features" page*
+   - *You will see a list of features with checkboxes*
+   - *Find "File and Storage Services" in the list*
+   - *Click the arrow (►) next to it to expand it*
+   - *You will see it expand to show more options*
+
+8. **Check "DFS Replication"**
+   - *In your window, you will see "DFS Replication" in the expanded list*
+   - *Click the checkbox next to "DFS Replication"*
+   - *The checkbox will show a checkmark (✓)*
+
+9. **Click Next**
+   - *In your window, click **Next** at the bottom*
+   - *You will see a confirmation page*
+
+10. **Click Install**
+    - *In your window, you will see an "Install" button*
+    - *Click it*
+    - *You will see a progress bar showing installation progress*
+
+11. **Wait for installation**
+    - *In your window, you will see messages like "Installing DFS Replication..."*
+    - *Wait until you see "Installation succeeded" or a green checkmark*
+    - *This may take 2-5 minutes*
+
+12. **Click Close**
+    - *In your window, you will see "Installation succeeded"*
+    - *Click **Close***
+    - *The wizard closes*
+
+**On ManchesterFS VM:**
+
+13. **Repeat all steps 1-12 above on the ManchesterFS VM**
+    - *Do exactly the same thing, but on the ManchesterFS server*
+    - *Log into ManchesterFS as LAB\Administrator*
+    - *Follow the same steps to install DFS Replication*
 
 ### TERMINAL METHOD (PowerShell)
 
@@ -410,47 +1050,171 @@ Get-WindowsFeature | Where-Object {$_.Name -like "*DFS*"}
 
 ## TASK 8: CREATE REPLICATION GROUP
 
+**What this does:** We're creating a replication group that tells DFS which servers should replicate (synchronize) files and which folders to replicate. This is like setting up automatic file copying between the two servers.
+
+**Do on:** Your DC VM (LondonFS)
+
 ### GUI METHOD (DFS Management)
 
-1. On **LondonFS**, open **DFS Management**
-2. In the left pane, click **Replication**
-3. Right-click **Replication** → Click **New Replication Group...**
-4. "New Replication Group Wizard" opens
-5. **Replication Group Type:** Select **Multipurpose replication group**
-6. Click **Next**
-7. **Name:** Type **ProjectsReplication**
-8. **Description:** (Optional) Type "Replication for Projects folder"
-9. Click **Next**
-10. **Replication Group Members:** Click **Add...**
-11. Type **LondonFS** → Click **OK**
-12. Click **Add...** again
-13. Type **ManchesterFS** → Click **OK**
-14. Both servers should be listed
-15. Click **Next**
-16. **Topology Selection:** Select **Full mesh**
-17. Click **Next**
-18. **Replication Group Schedule and Bandwidth:**
-    - Select **Replicate during the specified days and times**
-    - Click **Edit Schedule...**
-    - Set schedule: **Monday-Friday, 20:00-06:00** (8 PM to 6 AM)
-    - Click **OK**
-19. Click **Next**
-20. **Primary Member:** Select **LondonFS** (this will be the authoritative source)
-21. Click **Next**
-22. **Folders to Replicate:** Click **Add...**
-23. **Folder name:** Type **Projects**
-24. **Folder path on LondonFS:** Type **D:\Shares\Projects**
-25. Click **OK**
-26. Click **Next**
-27. **Other Members:** ManchesterFS should be listed
-28. Click **Edit...** next to ManchesterFS
-29. **Folder path on ManchesterFS:** Type **D:\Shares\Projects**
-30. Click **OK**
-31. Click **Next**
-32. Review settings
-33. Click **Create**
-34. Click **Close**
-35. Wait 5-10 minutes for AD synchronization and initial replication
+1. **On LondonFS, open DFS Management**
+   - *Click **Start** → **DFS Management** (or **Server Manager** → **Tools** → **DFS Management**)*
+   - *DFS Management window opens*
+
+2. **In the left pane, click "Replication"**
+   - *In your DFS Management window, look at the left pane*
+   - *You will see "Replication" in the tree*
+   - *Click on it*
+   - *The right pane will show replication information*
+
+3. **Right-click "Replication" → Click "New Replication Group..."**
+   - *In the left pane, right-click on "Replication"*
+   - *A context menu appears*
+   - *You will see "New Replication Group..." in the menu*
+   - *Click it*
+   - *The "New Replication Group Wizard" window opens*
+
+4. **"New Replication Group Wizard" window opens**
+   - *In your window, you will see the first page of the wizard*
+
+5. **Replication Group Type: Select "Multipurpose replication group"**
+   - *In your window, you will see two options:*
+     - *"Multipurpose replication group"*
+     - *"Replication group for data collection"*
+   - *Select the first option: **Multipurpose replication group***
+   - *Click **Next***
+
+6. **Name: Type "ProjectsReplication"**
+   - *In your window, you will see a page asking for "Name and Domain"*
+   - *You will see a text box labeled "Name:"*
+   - *Type **ProjectsReplication** in the text box*
+
+7. **Description: (Optional) Type "Replication for Projects folder"**
+   - *In the same window, you will see a text box labeled "Description:"*
+   - *Type **Replication for Projects folder** (optional, but helpful)*
+   - *Click **Next***
+
+8. **Replication Group Members: Click "Add..."**
+   - *In your window, you will see a page asking for "Replication Group Members"*
+   - *You will see an "Add..." button*
+   - *Click it*
+   - *A "Select Computers" window opens*
+
+9. **Type "LondonFS" → Click OK**
+   - *In the window, type **LondonFS** (or your DC name)*
+   - *Click **OK***
+   - *You return to the wizard and will see LondonFS in the list*
+
+10. **Click "Add..." again**
+    - *In the wizard window, click **Add...** again*
+    - *The "Select Computers" window opens again*
+
+11. **Type "ManchesterFS" → Click OK**
+    - *In the window, type **ManchesterFS***
+    - *Click **OK***
+    - *You return to the wizard*
+
+12. **Both servers should be listed**
+    - *In your window, you will see both servers listed:*
+      - *LondonFS*
+      - *ManchesterFS*
+    - *Click **Next***
+
+13. **Topology Selection: Select "Full mesh"**
+    - *In your window, you will see a page asking for "Topology Selection"*
+    - *You will see several options:*
+      - *Full mesh*
+      - *Hub and spoke*
+      - *No topology*
+    - *Select **Full mesh** (the first option)*
+    - *Click **Next***
+
+14. **Replication Group Schedule and Bandwidth:**
+    - *In your window, you will see a page asking for schedule*
+    - *You will see options for when replication should happen*
+    - *Select **"Replicate during the specified days and times"***
+    - *Click **Edit Schedule...** button*
+    - *A "Schedule" window opens*
+
+15. **Set schedule: Monday-Friday, 20:00-06:00**
+    - *In the Schedule window, you will see a grid showing days and times*
+    - *Select **Monday through Friday** (click and drag to select)*
+    - *Find the time slots for **20:00 (8 PM) to 06:00 (6 AM)***
+    - *Click and drag to select those time slots*
+    - *The selected area will be highlighted*
+    - *Click **OK***
+    - *You return to the wizard*
+
+16. **Click Next**
+    - *In the wizard, click **Next** to continue*
+
+17. **Primary Member: Select "LondonFS"**
+    - *In your window, you will see a page asking for "Primary Member"*
+    - *You will see a dropdown or list showing both servers*
+    - *Select **LondonFS** (or your DC name)*
+    - *This means LondonFS is the "source of truth" for files*
+    - *Click **Next***
+
+18. **Folders to Replicate: Click "Add..."**
+    - *In your window, you will see a page asking for "Folders to Replicate"*
+    - *You will see an "Add..." button*
+    - *Click it*
+    - *A "Add Folder to Replicate" window opens*
+
+19. **Folder name: Type "Projects"**
+    - *In the window, you will see a text box labeled "Folder name:"*
+    - *Type **Projects***
+
+20. **Folder path on LondonFS: Type "D:\Shares\Projects"**
+    - *In the same window, you will see a text box labeled "Folder path on [server]:"*
+    - *Type **D:\Shares\Projects** (or C:\Shares\Projects if you used C: drive)*
+    - *Click **OK***
+    - *You return to the wizard and will see "Projects" in the list*
+
+21. **Click Next**
+    - *In the wizard, click **Next** to continue*
+
+22. **Other Members: ManchesterFS should be listed**
+    - *In your window, you will see a page showing "Other Members"*
+    - *You will see ManchesterFS listed*
+    - *Next to it, you will see an "Edit..." button*
+
+23. **Click "Edit..." next to ManchesterFS**
+    - *Click the **Edit...** button next to ManchesterFS*
+    - *A "Edit Replicated Folder" window opens*
+
+24. **Folder path on ManchesterFS: Type "D:\Shares\Projects"**
+    - *In the window, you will see a text box asking for the folder path*
+    - *Type **D:\Shares\Projects** (or C:\Shares\Projects if you used C: drive)*
+    - *Click **OK***
+    - *You return to the wizard*
+
+25. **Click Next**
+    - *In the wizard, click **Next** to continue*
+
+26. **Review settings**
+    - *In your window, you will see a "Review Settings" page*
+    - *You will see a summary showing:*
+      - *Replication Group: ProjectsReplication*
+      - *Members: LondonFS, ManchesterFS*
+      - *Folder: Projects*
+      - *Topology: Full mesh*
+    - *Review to make sure everything is correct*
+
+27. **Click Create**
+    - *In your window, you will see a "Create" button*
+    - *Click it*
+    - *You will see progress messages: "Creating replication group..."*
+    - *Then: "The replication group was successfully created"*
+
+28. **Click Close**
+    - *In your window, you will see a "Close" button*
+    - *Click it*
+    - *The wizard closes*
+
+29. **Wait 5-10 minutes for AD synchronization and initial replication**
+    - *Back in DFS Management, you will see "ProjectsReplication" appear under "Replication" in the left pane*
+    - *Wait 5-10 minutes for everything to sync*
+    - *You can check the status in DFS Management*
 
 ### TERMINAL METHOD (PowerShell)
 

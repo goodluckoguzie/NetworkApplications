@@ -4,6 +4,44 @@ Quick command reference for DFS Namespace and Replication configuration.
 
 ---
 
+## Pre-Lab Setup Verification
+
+**Before starting Week 4, verify both servers are ready:**
+
+### Check Domain Membership
+
+```powershell
+(Get-WmiObject Win32_ComputerSystem).Domain
+```
+
+Should return: **lab.local**
+
+### Verify DNS Resolution
+
+```powershell
+Resolve-DnsName lab.local
+Resolve-DnsName LondonFS
+Resolve-DnsName ManchesterFS
+```
+
+### Test Network Connectivity
+
+```powershell
+Test-Connection LondonFS
+Test-Connection ManchesterFS
+Test-Connection 192.168.1.10  # Your DC IP
+```
+
+### Verify Domain Access
+
+```powershell
+Get-ADDomain
+```
+
+**All checks must pass before starting Week 4 activities.**
+
+---
+
 ## Installation Commands
 
 ### Install DFS Namespaces
