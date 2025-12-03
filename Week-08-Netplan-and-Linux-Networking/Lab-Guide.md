@@ -91,6 +91,258 @@ Ubuntu uses a layered approach to networking:
 - **Version:** Ubuntu 24.04.3 LTS (Noble Numbat)
 - **For VirtualBox:** Download the Desktop ISO (includes GUI)
 
+---
+
+## INSTALLING UBUNTU ON VIRTUALBOX
+
+**If you need to install Ubuntu on VirtualBox, follow these steps:**
+
+### Prerequisites:
+- **VirtualBox** installed on your computer ([Download VirtualBox](https://www.virtualbox.org/wiki/Downloads))
+- **Ubuntu 24.04.3 Desktop ISO** downloaded (see link above)
+- **At least 25 GB free disk space** (50 GB recommended)
+- **4 GB RAM available** (8 GB recommended)
+
+---
+
+### STEP 1: CREATE A NEW VIRTUAL MACHINE
+
+1. **Open VirtualBox**
+   - Launch VirtualBox application
+
+2. **Click "New" button**
+   - Top-left corner of VirtualBox window
+
+3. **Configure VM Settings:**
+   - **Name:** `Ubuntu 24.04` (or any name you prefer)
+   - **Machine Folder:** Leave default
+   - **Type:** `Linux`
+   - **Version:** `Ubuntu (64-bit)`
+   - Click **Next**
+
+4. **Set Memory (RAM):**
+   - **Recommended:** 4096 MB (4 GB) or more
+   - **Minimum:** 2048 MB (2 GB)
+   - Move the slider or type the value
+   - Click **Next**
+
+5. **Create Virtual Hard Disk:**
+   - Select **"Create a virtual hard disk now"**
+   - Click **Create**
+
+6. **Hard Disk File Type:**
+   - Select **VDI (VirtualBox Disk Image)**
+   - Click **Next**
+
+7. **Storage on Physical Hard Disk:**
+   - Select **"Dynamically allocated"** (recommended)
+   - Click **Next**
+
+8. **File Location and Size:**
+   - **Location:** Leave default or choose custom location
+   - **Size:** Set to **25 GB minimum** (50 GB recommended)
+   - Move slider or type the value
+   - Click **Create**
+
+**VM is now created!**
+
+---
+
+### STEP 2: CONFIGURE VIRTUAL MACHINE SETTINGS
+
+1. **Select your VM** in VirtualBox (left panel)
+   - Click on "Ubuntu 24.04" (or your VM name)
+
+2. **Click "Settings" button** (gear icon)
+
+3. **System Settings:**
+   - **Motherboard Tab:**
+     - Boot Order: Check **Optical** and **Hard Disk**
+     - Move **Optical** to top (drag it up)
+   - **Processor Tab:**
+     - Processors: Set to **2** (if you have 4+ cores)
+     - Enable **PAE/NX** (if available)
+
+4. **Display Settings:**
+   - **Screen Tab:**
+     - Video Memory: **128 MB** (or higher)
+     - Enable **3D Acceleration** (if available)
+
+5. **Storage Settings:**
+   - Click **Storage** in left menu
+   - Under **Controller: IDE**, click the **empty disk icon**
+   - Click the **CD/DVD icon** on the right
+   - Click **"Choose a disk file..."**
+   - Navigate to your downloaded Ubuntu ISO file
+   - Select `ubuntu-24.04.3-desktop-amd64.iso`
+   - Click **Open**
+
+6. **Network Settings:**
+   - Click **Network** in left menu
+   - **Adapter 1 Tab:**
+     - **Attached to:** `NAT` (default - good for internet access)
+     - **Note:** For static IP configuration, you'll need **Bridged Adapter** (we'll cover this in the lab)
+
+7. **Click OK** to save settings
+
+---
+
+### STEP 3: INSTALL UBUNTU
+
+1. **Start the Virtual Machine:**
+   - Select your VM
+   - Click **Start** button (green arrow)
+
+2. **Ubuntu Boot Menu:**
+   - You'll see Ubuntu boot options
+   - Select **"Try or Install Ubuntu"** (first option)
+   - Press **Enter**
+
+3. **Wait for Ubuntu to Load:**
+   - Ubuntu will boot from the ISO
+   - This may take a few minutes
+   - You'll see the Ubuntu desktop
+
+4. **Start Installation:**
+   - Double-click **"Install Ubuntu"** icon on desktop
+   - OR click **"Install Ubuntu"** button if shown
+
+5. **Installation Wizard:**
+
+   **Step 1: Welcome**
+   - Select your **Language** (English)
+   - Click **Continue**
+
+   **Step 2: Keyboard Layout**
+   - Select your keyboard layout
+   - Click **Continue**
+
+   **Step 3: Updates and Other Software**
+   - Select **"Normal installation"**
+   - Check **"Install third-party software"** (optional)
+   - Click **Continue**
+
+   **Step 4: Installation Type**
+   - Select **"Erase disk and install Ubuntu"**
+   - **Don't worry!** This only erases the virtual disk, not your real computer
+   - Click **Install Now**
+   - Click **Continue** to confirm
+
+   **Step 5: Where Are You?**
+   - Select your **time zone** (click on map or type city)
+   - Click **Continue**
+
+   **Step 6: Who Are You?**
+   - **Your name:** `student` (or your name)
+   - **Your computer's name:** `ubuntu-vm` (or any name)
+   - **Pick a username:** `student` (or your choice)
+   - **Choose a password:** Create a strong password (remember it!)
+   - **Confirm your password:** Type it again
+   - **Require my password to log in:** Check this box
+   - Click **Continue**
+
+6. **Installation Progress:**
+   - Ubuntu will install (takes 10-20 minutes)
+   - You'll see progress slides while it installs
+   - **Don't close the window!**
+
+7. **Installation Complete:**
+   - You'll see **"Installation Complete"** message
+   - Click **Restart Now**
+
+8. **Restart:**
+   - VM will restart
+   - You may see a message about removing installation media
+   - Press **Enter** when prompted
+   - Ubuntu will boot to login screen
+
+---
+
+### STEP 4: FIRST BOOT AND SETUP
+
+1. **Login:**
+   - Enter your password
+   - Press **Enter**
+
+2. **Welcome Screen:**
+   - Ubuntu will show welcome/setup screens
+   - Follow the prompts (language, privacy, etc.)
+   - Click **Next** or **Skip** as appropriate
+
+3. **Ubuntu Desktop:**
+   - You should now see the Ubuntu desktop
+   - Installation is complete!
+
+---
+
+### STEP 5: INSTALL VIRTUALBOX GUEST ADDITIONS (OPTIONAL BUT RECOMMENDED)
+
+**Guest Additions improve VM performance and features:**
+
+1. **In Ubuntu VM:**
+   - Click **Devices** menu (top of VM window)
+   - Select **"Insert Guest Additions CD image..."**
+
+2. **In Ubuntu:**
+   - A dialog may appear - click **Run**
+   - OR open Terminal and run:
+     ```bash
+     cd /media/student/VBox_GAs_*
+     sudo ./VBoxLinuxAdditions.run
+     ```
+
+3. **Enter password** when prompted
+
+4. **Restart VM:**
+   - Type: `sudo reboot`
+   - Press Enter
+
+---
+
+### TROUBLESHOOTING INSTALLATION
+
+**Problem: VM won't start**
+- **Solution:** Enable virtualization in BIOS (Intel VT-x or AMD-V)
+
+**Problem: Installation is slow**
+- **Solution:** Increase RAM allocation, close other programs
+
+**Problem: Screen is too small**
+- **Solution:** Install Guest Additions (see Step 5 above)
+
+**Problem: Can't see mouse cursor**
+- **Solution:** Press **Right Ctrl** key to release mouse from VM
+
+**Problem: Network not working**
+- **Solution:** Check Network settings in VM, ensure NAT is enabled
+
+---
+
+### VERIFY INSTALLATION
+
+1. **Open Terminal:**
+   - Press **Ctrl + Alt + T**
+
+2. **Check Ubuntu version:**
+   ```bash
+   lsb_release -a
+   ```
+   Should show: Ubuntu 24.04.3 LTS
+
+3. **Check network:**
+   ```bash
+   ip a
+   ```
+   Should show network interface with IP address
+
+4. **Test internet:**
+   ```bash
+   ping -c 4 8.8.8.8
+   ```
+   Should show successful ping responses
+
+---
+
 1. **Start your Ubuntu system**
    - Open your Ubuntu VM, lab PC, or LOD platform
    - Log in with your credentials
