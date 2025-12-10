@@ -11,7 +11,7 @@ Week-by-week lab guides and materials for Network Applications course.
 - [Week 6: Linux File Editing Permissions and Ownership](Week-06-Linux-File-Editing-Permissions-and-Ownership/)
 - [Week 7: Linux System Operations and Troubleshooting](Week-07-Linux-System-Operations-and-Troubleshooting/)
 - [Week 8: Netplan & Linux Networking](Week-08-Netplan-and-Linux-Networking/)
-- [Week 9: Linux Network Services and Firewall](Week-09-Linux-Network-Services-and-Firewall/)
+- [Week 9: Bash Scripting Fundamentals](Week-09-Bash-Scripting-Fundamentals/)
 
 ## 🎓 Course Information
 
