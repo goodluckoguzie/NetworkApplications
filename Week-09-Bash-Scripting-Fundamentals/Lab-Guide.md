@@ -145,8 +145,10 @@ $ which nano
 # greet.sh - A simple greeting script
 
 echo "Welcome to Bash Scripting!"
-read -p "What is your name? " username
-echo "Hello, ${username}! Nice to meet you."
+read -p "Enter your name: " username
+read -p "Enter your city: " city
+echo "Hello, ${username}!"
+echo "Welcome from ${city}."
 ```
 
 4. **Save and exit**
@@ -163,8 +165,9 @@ echo "Hello, ${username}! Nice to meet you."
 - `#!/bin/bash` - Shebang: tells system to use Bash interpreter
 - `# greet.sh` - Comment: describes the script (ignored during execution)
 - `echo` - Displays text to the screen
-- `read -p` - Prompts user for input and stores it in a variable
-- `${username}` - Safe way to expand/use the variable value
+- `read -p "prompt" variable` - Prompts user for input and **automatically stores** it in the variable
+- `${username}` and `${city}` - Safe way to expand/use the variable values
+- **No need to save variables separately** - `read` stores them automatically!
 
 ---
 
@@ -230,9 +233,16 @@ $ ls -l greet.sh
 ```
 $ ./greet.sh
 Welcome to Bash Scripting!
-What is your name? John
-Hello, John! Nice to meet you.
+Enter your name: John
+Enter your city: London
+Hello, John!
+Welcome from London.
 ```
+
+**Important Notes:**
+- The variables `${username}` and `${city}` **automatically contain** the values you typed
+- The `read` command **stores the input** - no need for additional save commands
+- If you don't see your name and city, check for typos in variable names!
 
 **Why `./`?**
 - `.` means "current directory"
