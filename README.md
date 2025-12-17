@@ -12,6 +12,7 @@ Week-by-week lab guides and materials for Network Applications course.
 - [Week 7: Linux System Operations and Troubleshooting](Week-07-Linux-System-Operations-and-Troubleshooting/)
 - [Week 8: Netplan & Linux Networking](Week-08-Netplan-and-Linux-Networking/)
 - [Week 9: Bash Scripting Fundamentals](Week-09-Bash-Scripting-Fundamentals/)
+- [Week 10: PowerShell Scripting Fundamentals](Week-10-PowerShell-Scripting-Fundamentals/)
 
 ## 🎓 Course Information
 

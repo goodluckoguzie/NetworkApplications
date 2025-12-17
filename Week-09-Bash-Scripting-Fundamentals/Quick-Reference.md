@@ -683,3 +683,4 @@ chmod 644 file.txt   # rw-r--r-- (common for data files)
 
 **🔖 Pro tip:** Keep this open during labs for quick reference!
 
+
